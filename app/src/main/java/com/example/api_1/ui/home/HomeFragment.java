@@ -14,8 +14,19 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.api_1.databinding.ContentMainBinding;
+import com.example.api_1.CatFact;
+import com.example.api_1.ConsumeFact;
+
 import com.example.api_1.databinding.FragmentHomeBinding;
+
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HomeFragment extends Fragment {
 
@@ -33,13 +44,47 @@ public class HomeFragment extends Fragment {
         final EditText inputTxt = binding.inputTxt;
         final Button submitButton = binding.submit;
 
+
+
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                titulo.setText(inputTxt.getText().toString());
+
                 Toast.makeText(getContext(), inputTxt.getText().toString(), Toast.LENGTH_SHORT).show();
+
+                Retrofit peticion = new Retrofit.Builder()
+                        .baseUrl("https://catfact.ninja/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+
+                ConsumeFact consumeFact = peticion.create(ConsumeFact.class);
+
+                Call<CatFact> call = consumeFact.getFacts();
+
+                call.enqueue(new Callback<CatFact>() {
+                    @Override
+                    public void onResponse(Call<CatFact> call, Response<CatFact> response) {
+                        if(!response.isSuccessful()){
+                            titulo.setText("Er: " + response.code());
+                            return;
+                        }
+
+                        CatFact catFacts = response.body();
+                        titulo.setText("Fact: " + catFacts.getFact() + "\n" + "Length: " + catFacts.getLength());
+                    }
+
+                    @Override
+                    public void onFailure(Call<CatFact> call, Throwable t) {
+                        titulo.setText("Excep " + t.getMessage());
+                    }
+                });
+
             }
         });
+
+
+
+
 
         /*contentMainBinding.submit.setOnClickListener(new View.OnClickListener() {
             @Override
